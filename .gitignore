@@ -26,4 +26,4 @@ yarn-error.log*
 node_modules
 
 # server keys
-/server/keys.json
+keys.json
