@@ -1,9 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import StartButton from './components/startButton'; // Correctly import the 'startButton' component
+import StartButton from './components/startButton';
 import './App.css';
 import LoginContainer from './components/loginContainer';
+import Website from './components/website';
+import SitesList from './components/sitesList';
+import SitesList2 from './components/sitesList2';
 
 const root = document.createElement("div")
 root.className = "container"
@@ -14,5 +17,7 @@ rootDiv.render(
     <App />
     <StartButton />
     <LoginContainer />
+    <Website />
+    <SitesList />
   </React.StrictMode>
 );
