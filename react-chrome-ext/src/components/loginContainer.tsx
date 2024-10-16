@@ -44,14 +44,33 @@ const LoginContainer: React.FC = () => {
     };
 
     const handleLogout = () => {
+        console.log('Logging out...');
+        fetch('http://127.0.0.1:5000/logout', {
+            method: 'GET',
+            credentials: 'include',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Logout data:', data);
+            if (data.message === 'Logged out!') {
+                chrome.storage.local.remove(['isLoggedIn', 'username'], () => {
+                    console.log('Chrome storage cleared.');
         setIsLoggedIn(false);
         setUsername('');
         setPassword('');
-
-        // Clear Chrome storage
-        chrome.storage.local.remove(['isLoggedIn', 'username'], () => {
-            console.log('Chrome storage cleared.');
-            window.location.reload();
+                    window.location.reload(); // Reload to update UI
+                });
+            } else {
+                console.error('Logout failed:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error during logout:', error);
         });
     };
 
@@ -64,6 +83,7 @@ const LoginContainer: React.FC = () => {
         });
     }, []);
 
+    // Render login or logout view based on isLoggedIn state
     if (isLoggedIn) {
         return (
             <div>

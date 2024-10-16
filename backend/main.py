@@ -13,11 +13,8 @@ CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
 @app.route('/')
 def hello():
-    username = session['username'] if 'username' in session else None
-    print(username)
-    print(f'Cookie received: {username}')  # Log the username cookie
     response = {
-        'message': 'Hello' + (f', {username}' if username else '') + '!'
+        'message': 'Hello' + (f', {session["username"]}' if session["username"] else '') + '!'
     }
     return jsonify(response)
 
@@ -30,6 +27,7 @@ def start():
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
+    print(data)
 
     if 'username' not in data or 'password' not in data:
         return jsonify({'message': 'Invalid input', 'success': False}), 400
@@ -44,6 +42,7 @@ def login():
 
     with open('accounts.json', 'r') as f:
         accounts = json.load(f)
+        print(accounts)
         if username in accounts:
             if accounts[username] != password:
                 return jsonify({'message': 'Invalid password', 'success': False}), 401
@@ -68,13 +67,14 @@ def login():
 @app.route('/set-cookie')
 def set_cookie():
     response = make_response(jsonify({'message': 'Cookie is set!'}))
-    response.set_cookie('test_cookie', 'test_value', samesite='None', secure=False)  # Adjust based on environment
+    response.set_cookie('test_cookie', 'test_value', samesite='None', secure=False)
     return response
 
 @app.route('/logout')
 def logout():
     response = make_response(jsonify({'message': 'Logged out!'}))
     response.set_cookie('username', '', expires=0)
+    session['username'] = None
     return response
 
 

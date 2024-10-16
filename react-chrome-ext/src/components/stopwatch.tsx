@@ -1,52 +1,40 @@
+import { useState, useEffect } from 'react';
 
-import React, { useState, useEffect } from 'react';
+declare const chrome: any;
 
 
 
 function Stopwatch() {
-
   const [time, setTime] = useState(0);
-  const [loggedin, setLoggedIn] = useState(false);
-
   const [isActive, setIsActive] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Initially set to false
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (isActive) {
-      interval = setInterval(() => {
-        setTime((time) => time + 1);
-      }, 1000);
-    } else if (!isActive && time !== 0) {
-      clearInterval(interval!);
-    }
-
-    return () => clearInterval(interval!);
-  }, [isActive, time]);
-
-  useEffect(() => {
-    chrome.storage.local.get(['isLoggedIn'], (result) => {
-      if (result.isLoggedIn) {
-        setLoggedIn(true);
-      }
+    chrome.storage.local.get(['isLoggedIn'], (result: StorageData) => {
+      setIsLoggedIn(result.isLoggedIn === true); // Set isLoggedIn based on chrome.storage
     });
   }, []);
 
   const handleStartStop = () => {
-    if (!isActive) {
-      setTime(0);
+    if (isActive) {
+      chrome.runtime.sendMessage({ command: 'stop' });
+    } else {
+      chrome.runtime.sendMessage({ command: 'start' });
     }
     setIsActive(!isActive);
   };
 
+  // Conditionally render the stopwatch component or a login message
+  if (!isLoggedIn) {
+    return <p>Please log in to use the stopwatch.</p>;
+  }
+
   return (
     <div>
-      <div>{time}s</div>
-      {loggedin && (
+      <p>{time}s</p>
         <button onClick={handleStartStop}>
           {isActive ? 'Stop' : 'Start'}
         </button>
-      )}
     </div>
   );
 }
