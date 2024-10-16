@@ -18,9 +18,28 @@ const LoginContainer: React.FC = () => {
         console.log('Username:', username);
         console.log('Password:', password);
 
-        chrome.storage.local.set({ isLoggedIn: true, username }, () => {
-            setIsLoggedIn(true);
-            window.location.reload(); 
+        fetch('http://127.0.0.1:5000/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+            credentials: 'include', // Include credentials (cookies) with the request
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Store login status in Chrome storage
+                chrome.storage.local.set({ isLoggedIn: true, username }, () => {
+                    setIsLoggedIn(true);
+                    window.location.reload();
+                });
+            } else {
+                console.error('Login failed:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
         });
     };
 
@@ -29,13 +48,10 @@ const LoginContainer: React.FC = () => {
         setUsername('');
         setPassword('');
 
+        // Clear Chrome storage
         chrome.storage.local.remove(['isLoggedIn', 'username'], () => {
             console.log('Chrome storage cleared.');
-            window.location.reload(); 
-        });
-
-        chrome.storage.local.remove(['domains'], () => {
-            console.log('Sites list cleared from storage.');
+            window.location.reload();
         });
     };
 

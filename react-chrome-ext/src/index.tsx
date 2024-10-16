@@ -6,7 +6,7 @@ import './App.css';
 import LoginContainer from './components/loginContainer';
 import Website from './components/website';
 import SitesList from './components/sitesList';
-import SitesList2 from './components/sitesList2';
+import Stopwatch from './components/stopwatch';
 
 const root = document.createElement("div")
 root.className = "container"
@@ -15,7 +15,7 @@ const rootDiv = ReactDOM.createRoot(root);
 rootDiv.render(
   <React.StrictMode>
     <App />
-    <StartButton />
+    <Stopwatch />
     <LoginContainer />
     <Website />
     <SitesList />

@@ -9,6 +9,14 @@
     },
     "permissions": [
         "storage",
-        "tabs"
+        "tabs",
+        "cookies",
+        "webNavigation",
+        "webRequest",
+        "activeTab",
+        "declarativeContent"
+    ],
+    "host_permissions": [
+        "https://www.example.com/*"
     ]
 }
