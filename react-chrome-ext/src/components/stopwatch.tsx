@@ -1,61 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-const Stopwatch: React.FC = () => {
-    const [time, setTime] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
-    const [longestTime, setLongestTime] = useState(0);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+declare const chrome: any;
 
-    useEffect(() => {
-        chrome.storage.local.get(['isLoggedIn'], (result) => {
-            if (result.isLoggedIn) {
-                setIsLoggedIn(true);
-            }
-        });
-    }, []);
+function Stopwatch() {
+  const [time, setTime] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+  const [highestTime, setHighestTime] = useState(() => {
+    return parseInt(localStorage.getItem('highestTime') || '0', 10);
+  });
 
-    useEffect(() => {
-        let timer: NodeJS.Timeout | undefined;
-        if (isRunning) {
-            timer = setInterval(() => {
-                setTime(prevTime => prevTime + 1);
-            }, 1000);
-        } else if (!isRunning && time !== 0) {
-            clearInterval(timer);
-            if (time > longestTime) {
-                setLongestTime(time);
-            }
+  useEffect(() => {
+    // Get the initial time and active state from the background script
+    chrome.runtime.sendMessage({ command: 'getTime' }, (response: { time: number, isActive: boolean }) => {
+      if (response) {
+        setTime(response.time);
+        setIsActive(response.isActive);
+      }
+    });
+
+    // Listen for real-time updates from the background script
+    const handleMessage = (message: { command: string, time?: number, isActive?: boolean }) => {
+      if (message.command === 'updateTime' && message.time !== undefined) {
+        setTime(message.time);
+        if (message.isActive !== undefined) {
+          setIsActive(message.isActive);
         }
-        return () => clearInterval(timer);
-    }, [isRunning, time]);
-
-    const handleStart = () => {
-        setTime(0);
-        setIsRunning(true);
+      }
     };
 
-    const handleStop = () => {
-        setIsRunning(false);
-    };
+    chrome.runtime.onMessage.addListener(handleMessage);
 
-    const handleResetLongestTime = () => {
-        setLongestTime(0);
+    // Cleanup listener on unmount
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMessage);
     };
+  }, []);
 
-    if (!isLoggedIn) {
-        return <div>Please log in to use the stopwatch.</div>;
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (isActive) {
+      interval = setInterval(() => {
+        setTime((prevTime) => {
+          const newTime = prevTime + 1;
+          localStorage.setItem('time', newTime.toString());
+          return newTime;
+        });
+      }, 1000);
+    } else {
+      if (interval) clearInterval(interval);
     }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isActive]);
 
-    return (
-        <div>
-            <h1>Stopwatch</h1>
-            <p>{time}s</p>
-            <p>Longest Time: {longestTime}s</p>
-            <button onClick={handleStart}>Start</button>
-            <button onClick={handleStop}>Stop</button>
-            <button onClick={handleResetLongestTime}>Reset Longest Time</button>
-        </div>
-    );
-};
+  const handleStartStop = () => {
+    if (isActive) {
+      chrome.runtime.sendMessage({ command: 'stop' });
+      setIsActive(false);
+      // Update the highest time when the stopwatch is stopped
+      if (time > highestTime) {
+        setHighestTime(time);
+        localStorage.setItem('highestTime', time.toString());
+      }
+    } else {
+      setTime(0); // Reset time when starting again
+      localStorage.setItem('time', '0');
+      chrome.runtime.sendMessage({ command: 'start' });
+      setIsActive(true);
+    }
+  };
+
+  return (
+    <div className='stopwatchContainer'>
+      <p className='stopwatch-time'>Current Time: {time}s</p>
+      <p className='stopwatch-highest'>Highest Time: {highestTime}s</p>
+      <button className='stopwatch-button' onClick={handleStartStop}>
+        {isActive ? 'Stop' : 'Start'}
+      </button>
+    </div>
+  );
+}
 
 export default Stopwatch;

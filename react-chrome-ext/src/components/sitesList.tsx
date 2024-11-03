@@ -4,16 +4,8 @@ const SitesList: React.FC = () => {
     const [url, setUrl] = useState('');
     const [urls, setUrls] = useState<string[]>([]);
     const [currentDomain, setCurrentDomain] = useState('');
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        // Check if user is logged in
-        chrome.storage.local.get(['isLoggedIn'], (result) => {
-            if (result.isLoggedIn) {
-                setIsLoggedIn(true);
-            }
-        });
-
         // Load URLs from chrome.storage
         chrome.storage.local.get(['domains'], (result) => {
             if (result.domains) {
@@ -28,7 +20,7 @@ const SitesList: React.FC = () => {
                 setCurrentDomain(url.hostname);
             }
         });
-    }, [isLoggedIn]);
+    }, []);
 
     const addUrl = () => {
         try {
@@ -48,12 +40,8 @@ const SitesList: React.FC = () => {
         chrome.storage.local.set({ domains: [] });
     };
 
-    if (!isLoggedIn) {
-        return <div>Please log in to view this content.</div>;
-    }
-
     return (
-        <div>
+        <div className='sites-list-container'>
             <input
                 type="text"
                 value={url}
@@ -62,7 +50,7 @@ const SitesList: React.FC = () => {
             />
             <button onClick={addUrl}>Add URL</button>
             <button onClick={clearUrls}>Clear URLs</button>
-            <ul>
+            <ul className='sites-list'>
                 {urls.map((storedUrl, index) => {
                     const domain = new URL(storedUrl).hostname;
                     return (
