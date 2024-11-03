@@ -4,15 +4,13 @@ function App() {
   const [data, setData] = useState('Loading...');
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/")
-      .then((response) => response.json())
-      .then((result) => {
-        setData(result.message); // Access the 'message' field in the JSON response
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-        setData('Error loading data');
-      });
+    // Simulate fetching data by directly assigning a value after a short delay
+    setTimeout(() => {
+      const mockData = {
+        message: 'Welcome to Study Safari! Enjoy your stay!'
+      };
+      setData(mockData.message); // Directly set the local data
+    }, 1000); // Delay for simulation purposes (1 second)
   }, []);
 
   // Log data to console whenever it changes

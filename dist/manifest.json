@@ -17,6 +17,10 @@
         "declarativeContent"
     ],
     "host_permissions": [
-        "https://www.example.com/*"
-    ]
+        "https://www.example.com/*",
+        "*://*/*"
+    ],
+    "background": {
+    "service_worker": "background.js"
+    }
 }

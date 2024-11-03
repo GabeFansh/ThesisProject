@@ -1,5 +1,7 @@
 {
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/react-slick": "^0.23.13",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.0",
@@ -13,8 +15,14 @@
     "watch": "webpack -w --config webpack.config.js"
   },
   "dependencies": {
+    "@aws-amplify/ui-react": "^6.3.0",
+    "@aws-sdk/client-dynamodb": "^3.648.0",
+    "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/credential-providers": "^3.645.0",
     "@types/chrome": "^0.0.270",
+    "aws-amplify": "^6.6.0",
     "react-router-dom": "^6.26.1",
+    "react-slick": "^0.30.2",
     "style-loader": "^4.0.0"
   }
 }
