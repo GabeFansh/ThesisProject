@@ -17,42 +17,14 @@ const availableAnimals: Animal[] = [
   { name: 'Mole Rat', imageUrl: 'https://cdn.pixabay.com/photo/2022/07/11/12/15/naked-mole-rat-7314787_960_720.png', cost: 1000 },
 ];
 
-// Component to add random movement to each redeemed animal
-function RandomMovement({ children }: { children: React.ReactNode }) {
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-
-  useEffect(() => {
-    const moveRandomly = () => {
-      const top = Math.random() * 90; // Generate random top position (within container limits)
-      const left = Math.random() * 90; // Generate random left position (within container limits)
-      setPosition({ top, left });
-    };
-
-    const intervalId = setInterval(moveRandomly, 1000); // Change position every second
-
-    return () => clearInterval(intervalId); // Clear interval on component unmount
-  }, []);
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        top: `${position.top}%`,
-        left: `${position.left}%`,
-        transition: 'top 0.8s ease, left 0.8s ease',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function AnimalRedeemer() {
   const [points, setPoints] = useState(0);
   const [redeemedAnimals, setRedeemedAnimals] = useState<Animal[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
+    // Load initial points and redeemed animals from chrome.storage.local
     chrome.storage.local.get(['points', 'redeemedAnimals'], (result: { points: any; redeemedAnimals: string; }) => {
       const storedPoints = parseInt(result.points || '0', 10);
       const storedAnimals = result.redeemedAnimals ? JSON.parse(result.redeemedAnimals) : [];
@@ -62,6 +34,7 @@ function AnimalRedeemer() {
   }, []);
 
   useEffect(() => {
+    // Listen for storage changes and update points in real-time
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, namespace: string) => {
       if (namespace === 'local') {
         if (changes.points) {
@@ -94,8 +67,19 @@ function AnimalRedeemer() {
     }
   };
 
+  const handleStop = (trackedTime: number) => {
+    const pointsEarned = Math.floor(trackedTime / 10); // Earn 1 point for every 10 seconds
+    const newPoints = points + pointsEarned;
+
+    chrome.storage.local.set({ points: newPoints }, () => {
+      setPoints(newPoints);
+      alert(`You earned ${pointsEarned} points!`);
+    });
+  };
+
   const availableForRedemption = availableAnimals.filter(animal => !redeemedAnimals.some(redeemed => redeemed.name === animal.name));
 
+  // Manual carousel logic
   const handleNext = () => {
     setCarouselIndex((prevIndex) => (prevIndex + 1) % availableForRedemption.length);
   };
@@ -103,6 +87,17 @@ function AnimalRedeemer() {
   const handlePrev = () => {
     setCarouselIndex((prevIndex) => (prevIndex - 1 + availableForRedemption.length) % availableForRedemption.length);
   };
+
+  // Slideshow logic
+  useEffect(() => {
+    if (redeemedAnimals.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % redeemedAnimals.length);
+      }, 3000); // Change slide every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [redeemedAnimals]);
 
   return (
     <div>
@@ -126,27 +121,17 @@ function AnimalRedeemer() {
       </div>
       <h3>Redeemed Animals</h3>
       {redeemedAnimals.length > 0 ? (
-        <div
-          className="redeemed-animals-container"
-          style={{
-            position: 'relative',
-            width: '300px',
-            height: '300px',
-            border: '1px solid black',
-            overflow: 'hidden',
-            margin: '20px auto',
-          }}
-        >
-          {redeemedAnimals.map((animal, index) => (
-            <RandomMovement key={index}>
-              <img
-                src={animal.imageUrl}
-                alt={animal.name}
-                width={50}
-                height={50}
-              />
-            </RandomMovement>
-          ))}
+        <div className="slideshow-container" style={{ textAlign: 'center' }}>
+          <div className="slideshow-item">
+            <img
+              src={redeemedAnimals[currentSlide].imageUrl}
+              alt={redeemedAnimals[currentSlide].name}
+              width={150}
+              height={150}
+              style={{ display: 'block', margin: '0 auto', marginBottom: '5px' }}
+            />
+            <p>{redeemedAnimals[currentSlide].name}</p>
+          </div>
         </div>
       ) : (
         <p>No animals redeemed yet.</p>
