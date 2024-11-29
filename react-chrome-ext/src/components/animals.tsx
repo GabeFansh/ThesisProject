@@ -17,21 +17,26 @@ const availableAnimals: Animal[] = [
   { name: 'Mole Rat', imageUrl: 'https://cdn.pixabay.com/photo/2022/07/11/12/15/naked-mole-rat-7314787_960_720.png', cost: 1000 },
 ];
 
-// Component to add random movement to each redeemed animal
-function RandomMovement({ children }: { children: React.ReactNode }) {
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+function RandomWalkingMovement({ children }: { children: React.ReactNode }) {
+  const [position, setPosition] = useState({ top: 50, left: 50 });
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
     const moveRandomly = () => {
-      const top = Math.random() * 90; // Generate random top position (within container limits)
-      const left = Math.random() * 90; // Generate random left position (within container limits)
-      setPosition({ top, left });
+      const deltaX = (Math.random() - 0.5) * 10;
+      const deltaY = (Math.random() - 0.5) * 10;
+
+      const newTop = Math.min(90, Math.max(0, position.top + deltaY));
+      const newLeft = Math.min(90, Math.max(0, position.left + deltaX));
+
+      setPosition({ top: newTop, left: newLeft });
+      setRotation((Math.random() - 0.5) * 20);
     };
 
-    const intervalId = setInterval(moveRandomly, 1000); // Change position every second
+    const intervalId = setInterval(moveRandomly, 300);
 
-    return () => clearInterval(intervalId); // Clear interval on component unmount
-  }, []);
+    return () => clearInterval(intervalId);
+  }, [position]);
 
   return (
     <div
@@ -39,7 +44,8 @@ function RandomMovement({ children }: { children: React.ReactNode }) {
         position: 'absolute',
         top: `${position.top}%`,
         left: `${position.left}%`,
-        transition: 'top 0.8s ease, left 0.8s ease',
+        transition: 'top 0.3s ease, left 0.3s ease, transform 0.3s ease',
+        transform: `rotate(${rotation}deg)`,
       }}
     >
       {children}
@@ -135,17 +141,20 @@ function AnimalRedeemer() {
             border: '1px solid black',
             overflow: 'hidden',
             margin: '20px auto',
+            backgroundImage: 'url(https://cdn.pixabay.com/photo/2016/11/29/02/31/grass-1866870_1280.jpg)', // Grasslands background image
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
           {redeemedAnimals.map((animal, index) => (
-            <RandomMovement key={index}>
+            <RandomWalkingMovement key={index}>
               <img
                 src={animal.imageUrl}
                 alt={animal.name}
                 width={50}
                 height={50}
               />
-            </RandomMovement>
+            </RandomWalkingMovement>
           ))}
         </div>
       ) : (
